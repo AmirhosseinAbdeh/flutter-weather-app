@@ -1,3 +1,5 @@
+import 'json_helpers.dart';
+
 /// Current weather for a single city, parsed from the OpenWeatherMap
 /// `/weather` endpoint response.
 class Weather {
@@ -60,34 +62,27 @@ class Weather {
   /// Missing or malformed fields fall back to sensible defaults so parsing
   /// never throws on an unexpected payload.
   factory Weather.fromJson(Map<String, dynamic> json) {
-    final main = json['main'] as Map<String, dynamic>? ?? const {};
-    final wind = json['wind'] as Map<String, dynamic>? ?? const {};
-    final sys = json['sys'] as Map<String, dynamic>? ?? const {};
-    final weatherList = json['weather'] as List<dynamic>? ?? const [];
-    final weather = weatherList.isNotEmpty
-        ? weatherList.first as Map<String, dynamic>
-        : const <String, dynamic>{};
+    final main = jsonToMap(json['main']);
+    final wind = jsonToMap(json['wind']);
+    final sys = jsonToMap(json['sys']);
+    final weatherList = jsonToList(json['weather']);
+    final weather = weatherList.isEmpty
+        ? const <String, dynamic>{}
+        : jsonToMap(weatherList.first);
 
     return Weather(
-      cityName: json['name'] as String? ?? '',
-      country: sys['country'] as String? ?? '',
-      temperature: _toDouble(main['temp']),
-      feelsLike: _toDouble(main['feels_like']),
-      tempMin: _toDouble(main['temp_min']),
-      tempMax: _toDouble(main['temp_max']),
-      humidity: _toInt(main['humidity']),
-      pressure: _toInt(main['pressure']),
-      windSpeed: _toDouble(wind['speed']),
-      condition: weather['main'] as String? ?? '',
-      description: weather['description'] as String? ?? '',
-      icon: weather['icon'] as String? ?? '',
+      cityName: jsonToString(json['name']),
+      country: jsonToString(sys['country']),
+      temperature: jsonToDouble(main['temp']),
+      feelsLike: jsonToDouble(main['feels_like']),
+      tempMin: jsonToDouble(main['temp_min']),
+      tempMax: jsonToDouble(main['temp_max']),
+      humidity: jsonToInt(main['humidity']),
+      pressure: jsonToInt(main['pressure']),
+      windSpeed: jsonToDouble(wind['speed']),
+      condition: jsonToString(weather['main']),
+      description: jsonToString(weather['description']),
+      icon: jsonToString(weather['icon']),
     );
   }
-
-  /// Safely converts a JSON number (int or double) to a [double].
-  static double _toDouble(Object? value) =>
-      value is num ? value.toDouble() : 0.0;
-
-  /// Safely converts a JSON number to an [int].
-  static int _toInt(Object? value) => value is num ? value.toInt() : 0;
 }

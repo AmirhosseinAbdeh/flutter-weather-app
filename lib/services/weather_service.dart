@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
+import '../models/forecast.dart';
 import '../models/weather.dart';
 
 /// Thrown when a weather request fails, carrying a user-friendly [message].
@@ -29,19 +30,37 @@ class WeatherService {
   /// Throws a [WeatherException] with a readable message on any failure
   /// (missing key, unknown city, network error, or unexpected status).
   Future<Weather> getCurrentWeather(String city) async {
+    final json = await _fetch(ApiConfig.weatherPath, city);
+    return Weather.fromJson(json);
+  }
+
+  /// Fetches the 5-day / 3-hour forecast for [city].
+  ///
+  /// Throws a [WeatherException] on failure, as [getCurrentWeather] does.
+  Future<Forecast> getForecast(String city) async {
+    final json = await _fetch(ApiConfig.forecastPath, city);
+    return Forecast.fromJson(json);
+  }
+
+  /// Requests [path] for [city] and returns the decoded JSON body.
+  ///
+  /// Maps every failure onto a [WeatherException] carrying a message that is
+  /// safe to show the user.
+  Future<Map<String, dynamic>> _fetch(String path, String city) async {
     if (_apiKey.isEmpty) {
       throw const WeatherException(
         'No API key set. Run with --dart-define=OWM_API_KEY=your_key.',
       );
     }
 
-    final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.weatherPath}')
-        .replace(queryParameters: {
-      'q': city,
-      'appid': _apiKey,
-      'units': ApiConfig.units,
-      'lang': ApiConfig.language,
-    });
+    final uri = Uri.parse('${ApiConfig.baseUrl}$path').replace(
+      queryParameters: {
+        'q': city,
+        'appid': _apiKey,
+        'units': ApiConfig.units,
+        'lang': ApiConfig.language,
+      },
+    );
 
     final http.Response response;
     try {
@@ -54,8 +73,7 @@ class WeatherService {
 
     switch (response.statusCode) {
       case 200:
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return Weather.fromJson(json);
+        return jsonDecode(response.body) as Map<String, dynamic>;
       case 401:
         throw const WeatherException('Invalid API key.');
       case 404:
