@@ -4,6 +4,7 @@ import '../models/weather.dart';
 import '../services/weather_service.dart';
 import '../widgets/current_weather_view.dart';
 import '../widgets/error_view.dart';
+import 'forecast_screen.dart';
 import 'search_screen.dart';
 
 /// The app's landing screen: shows the current weather for the default city.
@@ -45,6 +46,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openForecast() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const ForecastScreen(city: _defaultCity),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,6 +64,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _openSearch,
             icon: const Icon(Icons.search),
             tooltip: 'Search city',
+          ),
+          IconButton(
+            onPressed: _openForecast,
+            icon: const Icon(Icons.calendar_month),
+            tooltip: '5-day forecast',
           ),
           IconButton(
             onPressed: _refresh,
