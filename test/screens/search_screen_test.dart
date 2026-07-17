@@ -7,7 +7,10 @@ void main() {
     testWidgets('shows the empty state before any search', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SearchScreen()));
 
-      expect(find.text('Search for a city to see its weather.'), findsOneWidget);
+      expect(
+        find.text('Search for a city to see its weather.'),
+        findsOneWidget,
+      );
       expect(find.byType(TextField), findsOneWidget);
     });
 
@@ -19,7 +22,10 @@ void main() {
       await tester.pump();
 
       // Still the empty state: no request was made.
-      expect(find.text('Search for a city to see its weather.'), findsOneWidget);
+      expect(
+        find.text('Search for a city to see its weather.'),
+        findsOneWidget,
+      );
     });
   });
 }

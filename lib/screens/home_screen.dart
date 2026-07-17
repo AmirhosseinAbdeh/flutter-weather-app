@@ -4,6 +4,7 @@ import '../models/weather.dart';
 import '../services/weather_service.dart';
 import '../widgets/current_weather_view.dart';
 import '../widgets/error_view.dart';
+import 'favorites_screen.dart';
 import 'forecast_screen.dart';
 import 'search_screen.dart';
 
@@ -41,15 +42,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openSearch() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => const SearchScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (context) => const SearchScreen()));
   }
 
   void _openForecast() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const ForecastScreen(city: _defaultCity),
+      ),
+    );
+  }
+
+  /// Opens the favorites list; if the user taps a city there, shows its weather
+  /// in the search screen.
+  Future<void> _openFavorites() async {
+    final city = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(builder: (context) => FavoritesScreen()),
+    );
+    if (!mounted || city == null) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => SearchScreen(initialCity: city),
       ),
     );
   }
@@ -69,6 +85,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _openForecast,
             icon: const Icon(Icons.calendar_month),
             tooltip: '5-day forecast',
+          ),
+          IconButton(
+            onPressed: _openFavorites,
+            icon: const Icon(Icons.star),
+            tooltip: 'Favorite cities',
           ),
           IconButton(
             onPressed: _refresh,
