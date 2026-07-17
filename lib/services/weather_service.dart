@@ -19,8 +19,8 @@ class WeatherException implements Exception {
 /// Fetches weather data from the OpenWeatherMap REST API and maps it to models.
 class WeatherService {
   WeatherService({http.Client? client, String? apiKey})
-      : _client = client ?? http.Client(),
-        _apiKey = apiKey ?? ApiConfig.apiKey;
+    : _client = client ?? http.Client(),
+      _apiKey = apiKey ?? ApiConfig.apiKey;
 
   final http.Client _client;
   final String _apiKey;

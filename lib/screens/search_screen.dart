@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../models/weather.dart';
+import '../services/favorites_service.dart';
 import '../services/weather_service.dart';
 import '../widgets/current_weather_view.dart';
 import '../widgets/error_view.dart';
 
-/// Lets the user search for a city and see its current weather.
+/// Lets the user search for a city, see its current weather, and save it as a
+/// favorite.
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.initialCity});
+
+  /// When set, this city is loaded automatically as the screen opens (used when
+  /// arriving from the favorites list).
+  final String? initialCity;
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -15,10 +21,25 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final WeatherService _service = WeatherService();
+  final FavoritesService _favorites = FavoritesService();
   final TextEditingController _controller = TextEditingController();
 
-  /// Null until the user runs their first search.
+  /// Null until the first search runs; drives the loading/error/result view.
   Future<Weather>? _weatherFuture;
+
+  /// The successfully-loaded weather, or null while loading / on error.
+  Weather? _currentWeather;
+  bool _isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialCity;
+    if (initial != null && initial.trim().isNotEmpty) {
+      _controller.text = initial;
+      _load(initial);
+    }
+  }
 
   @override
   void dispose() {
@@ -27,19 +48,66 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  void _search() {
-    final city = _controller.text.trim();
+  void _search() => _load(_controller.text);
+
+  Future<void> _load(String rawCity) async {
+    final city = rawCity.trim();
     if (city.isEmpty) return;
 
+    final future = _service.getCurrentWeather(city);
     setState(() {
-      _weatherFuture = _service.getCurrentWeather(city);
+      _weatherFuture = future;
+      _currentWeather = null;
+      _isFavorite = false;
     });
+
+    try {
+      final weather = await future;
+      final isFavorite = await _favorites.isFavorite(weather.cityName);
+      if (!mounted) return;
+      setState(() {
+        _currentWeather = weather;
+        _isFavorite = isFavorite;
+      });
+    } catch (_) {
+      // The FutureBuilder renders the error; nothing else to do here.
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final weather = _currentWeather;
+    if (weather == null) return;
+
+    final nowFavorite = await _favorites.toggle(weather.cityName);
+    if (!mounted) return;
+    setState(() => _isFavorite = nowFavorite);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          nowFavorite
+              ? '${weather.cityName} added to favorites'
+              : '${weather.cityName} removed from favorites',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
+      appBar: AppBar(
+        title: const Text('Search'),
+        actions: [
+          if (_currentWeather != null)
+            IconButton(
+              onPressed: _toggleFavorite,
+              icon: Icon(_isFavorite ? Icons.star : Icons.star_border),
+              tooltip: _isFavorite ? 'Remove favorite' : 'Add to favorites',
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
@@ -74,8 +142,8 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Text(
           'Search for a city to see its weather.',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       );
     }

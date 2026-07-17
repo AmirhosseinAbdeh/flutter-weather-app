@@ -83,11 +83,7 @@ class CurrentWeatherView extends StatelessWidget {
 
 /// A single labelled weather statistic (feels like, humidity, wind…).
 class _Detail extends StatelessWidget {
-  const _Detail({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+  const _Detail({required this.icon, required this.label, required this.value});
 
   final IconData icon;
   final String label;
