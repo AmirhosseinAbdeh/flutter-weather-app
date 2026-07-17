@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Shown when loading weather fails, with an optional retry action.
 ///
-/// Shared by the Home and Search screens.
+/// Designed to sit on a [GradientBackground], so its text is white.
+/// Shared by the Home, Search, and Forecast screens.
 class ErrorView extends StatelessWidget {
   const ErrorView({super.key, required this.message, this.onRetry});
 
@@ -13,7 +14,6 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final retry = onRetry;
 
     return Center(
@@ -22,16 +22,20 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
+            const Icon(Icons.error_outline, size: 64, color: Colors.white),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
             if (retry != null) ...[
               const SizedBox(height: 16),
               FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF2196F3),
+                ),
                 onPressed: retry,
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),

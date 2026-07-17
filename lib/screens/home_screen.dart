@@ -4,6 +4,7 @@ import '../models/weather.dart';
 import '../services/weather_service.dart';
 import '../widgets/current_weather_view.dart';
 import '../widgets/error_view.dart';
+import '../widgets/gradient_background.dart';
 import 'favorites_screen.dart';
 import 'forecast_screen.dart';
 import 'search_screen.dart';
@@ -73,7 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text('Weather'),
         actions: [
           IconButton(
@@ -101,27 +107,39 @@ class _HomeScreenState extends State<HomeScreen> {
       body: FutureBuilder<Weather>(
         future: _weatherFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final error = snapshot.error;
-          if (error != null) {
-            return ErrorView(
-              message: error is WeatherException
-                  ? error.message
-                  : 'Something went wrong. Please try again.',
-              onRetry: _refresh,
-            );
-          }
-
-          final weather = snapshot.data;
-          if (weather == null) {
-            return const SizedBox.shrink();
-          }
-          return CurrentWeatherView(weather: weather);
+          final loaded =
+              snapshot.connectionState != ConnectionState.waiting &&
+              snapshot.error == null;
+          return GradientBackground(
+            icon: loaded ? snapshot.data?.icon : null,
+            child: SafeArea(child: _buildContent(snapshot)),
+          );
         },
       ),
     );
+  }
+
+  Widget _buildContent(AsyncSnapshot<Weather> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
+    }
+
+    final error = snapshot.error;
+    if (error != null) {
+      return ErrorView(
+        message: error is WeatherException
+            ? error.message
+            : 'Something went wrong. Please try again.',
+        onRetry: _refresh,
+      );
+    }
+
+    final weather = snapshot.data;
+    if (weather == null) {
+      return const SizedBox.shrink();
+    }
+    return CurrentWeatherView(weather: weather);
   }
 }

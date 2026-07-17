@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../models/weather.dart';
 
-/// Renders the current weather for a city: location, icon, temperature,
-/// description, and a details card.
+/// Renders the current weather for a city on a translucent card: location,
+/// icon, temperature, description, and a details row.
 ///
+/// Designed to sit on a [GradientBackground], so its text is white.
 /// Shared by the Home and Search screens.
 class CurrentWeatherView extends StatelessWidget {
   const CurrentWeatherView({super.key, required this.weather});
 
   final Weather weather;
 
+  static const Color _translucent = Color(0x26FFFFFF); // 15% white
+  static const Color _hairline = Color(0x33FFFFFF); // 20% white
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final location = weather.country.isEmpty
         ? weather.cityName
         : '${weather.cityName}, ${weather.country}';
@@ -24,59 +27,97 @@ class CurrentWeatherView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(location, style: theme.textTheme.headlineSmall),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.location_on, color: Colors.white, size: 20),
+                const SizedBox(width: 4),
+                Text(
+                  location,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Image.network(
               weather.iconUrl,
-              width: 120,
-              height: 120,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.cloud_outlined, size: 96),
+              width: 140,
+              height: 140,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.cloud_outlined,
+                size: 96,
+                color: Colors.white,
+              ),
             ),
             Text(
               '${weather.temperature.round()}°',
-              style: theme.textTheme.displayLarge,
-            ),
-            Text(
-              weather.description,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 88,
+                fontWeight: FontWeight.w200,
+                height: 1,
               ),
             ),
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _Detail(
-                      icon: Icons.thermostat,
-                      label: 'Feels like',
-                      value: '${weather.feelsLike.round()}°',
-                    ),
-                    const SizedBox(width: 32),
-                    _Detail(
-                      icon: Icons.water_drop_outlined,
-                      label: 'Humidity',
-                      value: '${weather.humidity}%',
-                    ),
-                    const SizedBox(width: 32),
-                    _Detail(
-                      icon: Icons.air,
-                      label: 'Wind',
-                      value: '${weather.windSpeed.toStringAsFixed(1)} m/s',
-                    ),
-                  ],
-                ),
+            Text(
+              _capitalize(weather.description),
+              style: const TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              decoration: BoxDecoration(
+                color: _translucent,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _hairline),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _Detail(
+                    icon: Icons.thermostat,
+                    label: 'Feels like',
+                    value: '${weather.feelsLike.round()}°',
+                  ),
+                  const _VerticalDivider(),
+                  _Detail(
+                    icon: Icons.water_drop_outlined,
+                    label: 'Humidity',
+                    value: '${weather.humidity}%',
+                  ),
+                  const _VerticalDivider(),
+                  _Detail(
+                    icon: Icons.air,
+                    label: 'Wind',
+                    value: '${weather.windSpeed.toStringAsFixed(1)} m/s',
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  static String _capitalize(String text) =>
+      text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
+}
+
+/// A thin vertical rule between two [_Detail]s.
+class _VerticalDivider extends StatelessWidget {
+  const _VerticalDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 40,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      color: CurrentWeatherView._hairline,
     );
   }
 }
@@ -91,14 +132,22 @@ class _Detail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Column(
       children: [
-        Icon(icon, color: theme.colorScheme.primary),
+        Icon(icon, color: Colors.white),
         const SizedBox(height: 4),
-        Text(value, style: theme.textTheme.titleMedium),
-        Text(label, style: theme.textTheme.bodySmall),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
       ],
     );
   }
