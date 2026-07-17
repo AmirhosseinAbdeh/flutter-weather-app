@@ -5,6 +5,7 @@ import '../services/favorites_service.dart';
 import '../services/weather_service.dart';
 import '../widgets/current_weather_view.dart';
 import '../widgets/error_view.dart';
+import '../widgets/gradient_background.dart';
 
 /// Lets the user search for a city, see its current weather, and save it as a
 /// favorite.
@@ -97,7 +98,12 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text('Search'),
         actions: [
           if (_currentWeather != null)
@@ -108,29 +114,52 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _controller,
-              autofocus: true,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _search(),
-              decoration: InputDecoration(
-                hintText: 'Enter a city name',
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  onPressed: _search,
-                  icon: const Icon(Icons.arrow_forward),
-                  tooltip: 'Search',
+      body: GradientBackground(
+        icon: _currentWeather?.icon,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(top: kToolbarHeight),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildSearchField(),
                 ),
-              ),
+                Expanded(child: _buildResult(context)),
+              ],
             ),
           ),
-          Expanded(child: _buildResult(context)),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    OutlineInputBorder border(Color color) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: color),
+    );
+
+    return TextField(
+      controller: _controller,
+      autofocus: true,
+      style: const TextStyle(color: Colors.white),
+      cursorColor: Colors.white,
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => _search(),
+      decoration: InputDecoration(
+        hintText: 'Enter a city name',
+        hintStyle: const TextStyle(color: Colors.white70),
+        prefixIcon: const Icon(Icons.search, color: Colors.white70),
+        filled: true,
+        fillColor: const Color(0x26FFFFFF),
+        enabledBorder: border(const Color(0x33FFFFFF)),
+        focusedBorder: border(Colors.white),
+        suffixIcon: IconButton(
+          onPressed: _search,
+          icon: const Icon(Icons.arrow_forward, color: Colors.white70),
+          tooltip: 'Search',
+        ),
       ),
     );
   }
@@ -138,11 +167,13 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildResult(BuildContext context) {
     final future = _weatherFuture;
     if (future == null) {
-      return Center(
-        child: Text(
-          'Search for a city to see its weather.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'Search for a city to see its weather.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, fontSize: 16),
           ),
         ),
       );
@@ -152,7 +183,9 @@ class _SearchScreenState extends State<SearchScreen> {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
         }
 
         final error = snapshot.error;
