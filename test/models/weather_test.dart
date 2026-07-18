@@ -38,6 +38,37 @@ void main() {
       expect(weather.iconUrl, 'https://openweathermap.org/img/wn/01d@2x.png');
     });
 
+    test('converts sunrise and sunset to local time', () {
+      // 2026-07-15 05:30 and 20:15 UTC, as unix seconds.
+      final sunriseUtc = DateTime.utc(2026, 7, 15, 5, 30);
+      final sunsetUtc = DateTime.utc(2026, 7, 15, 20, 15);
+
+      final weather = Weather.fromJson({
+        'name': 'Tehran',
+        'sys': {
+          'country': 'IR',
+          'sunrise': sunriseUtc.millisecondsSinceEpoch ~/ 1000,
+          'sunset': sunsetUtc.millisecondsSinceEpoch ~/ 1000,
+        },
+        'main': {'temp': 30.0},
+        'weather': <dynamic>[],
+      });
+
+      expect(weather.sunrise, sunriseUtc.toLocal());
+      expect(weather.sunset, sunsetUtc.toLocal());
+    });
+
+    test('leaves sunrise and sunset null when the API omits them', () {
+      final weather = Weather.fromJson({
+        'name': 'Tehran',
+        'main': {'temp': 30.0},
+        'weather': <dynamic>[],
+      });
+
+      expect(weather.sunrise, isNull);
+      expect(weather.sunset, isNull);
+    });
+
     test('handles integer temperatures and missing fields gracefully', () {
       final json = <String, dynamic>{
         'name': 'Paris',
