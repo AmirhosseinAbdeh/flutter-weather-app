@@ -24,10 +24,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final WeatherService _service = WeatherService();
   late Future<Weather> _weatherFuture;
 
+  /// When the displayed weather finished loading; null until the first success.
+  DateTime? _updatedAt;
+
   @override
   void initState() {
     super.initState();
-    _weatherFuture = _service.getCurrentWeather(_defaultCity);
+    _weatherFuture = _load();
   }
 
   @override
@@ -36,10 +39,31 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  /// Starts a request and stamps [_updatedAt] once it succeeds.
+  Future<Weather> _load() {
+    final future = _service.getCurrentWeather(_defaultCity);
+    // Errors are surfaced by the FutureBuilder; this listener only timestamps.
+    future.then<void>((_) {
+      if (mounted) setState(() => _updatedAt = DateTime.now());
+    }, onError: (Object _) {});
+    return future;
+  }
+
   void _refresh() {
     setState(() {
-      _weatherFuture = _service.getCurrentWeather(_defaultCity);
+      _weatherFuture = _load();
     });
+  }
+
+  /// Pull-to-refresh handler: completes when the new request settles.
+  Future<void> _handleRefresh() async {
+    final future = _load();
+    setState(() => _weatherFuture = future);
+    try {
+      await future;
+    } catch (_) {
+      // The FutureBuilder renders the error.
+    }
   }
 
   void _openSearch() {
@@ -140,6 +164,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (weather == null) {
       return const SizedBox.shrink();
     }
-    return CurrentWeatherView(weather: weather);
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      child: CurrentWeatherView(weather: weather, updatedAt: _updatedAt),
+    );
   }
 }

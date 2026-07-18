@@ -24,3 +24,16 @@ List<dynamic> jsonToList(Object? value) => value is List ? value : const [];
 
 /// Reads a JSON string, defaulting to `''` when absent or not a string.
 String jsonToString(Object? value) => value is String ? value : '';
+
+/// Converts a UTC unix timestamp in seconds to local time.
+///
+/// Returns null when the field is absent, non-numeric, or zero, so callers can
+/// hide the value rather than show the epoch.
+DateTime? jsonToLocalTime(Object? value) {
+  final seconds = jsonToInt(value);
+  if (seconds == 0) return null;
+  return DateTime.fromMillisecondsSinceEpoch(
+    seconds * 1000,
+    isUtc: true,
+  ).toLocal();
+}

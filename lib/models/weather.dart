@@ -16,6 +16,8 @@ class Weather {
     required this.condition,
     required this.description,
     required this.icon,
+    this.sunrise,
+    this.sunset,
   });
 
   /// City name, e.g. "Tehran".
@@ -54,6 +56,12 @@ class Weather {
   /// Icon code, e.g. "01d". See [iconUrl].
   final String icon;
 
+  /// Local sunrise time, or null when the API did not report it.
+  final DateTime? sunrise;
+
+  /// Local sunset time, or null when the API did not report it.
+  final DateTime? sunset;
+
   /// Full URL of the weather icon served by OpenWeatherMap.
   String get iconUrl => 'https://openweathermap.org/img/wn/$icon@2x.png';
 
@@ -83,6 +91,8 @@ class Weather {
       condition: jsonToString(weather['main']),
       description: jsonToString(weather['description']),
       icon: jsonToString(weather['icon']),
+      sunrise: jsonToLocalTime(sys['sunrise']),
+      sunset: jsonToLocalTime(sys['sunset']),
     );
   }
 }
