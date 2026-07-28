@@ -165,31 +165,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!mounted) return;
 
-    debugPrint('1');
-
     final location = await _locationService.getCurrentLocation();
-
-    debugPrint('2');
-
-    debugPrint(location.status.toString());
-
-    debugPrint(location.latitude.toString());
-    debugPrint(location.longitude.toString());
 
     if (!mounted) return;
 
-    debugPrint('3');
     switch (location.status) {
       case LocationStatus.success:
-        debugPrint('SUCCESS');
         try {
-          debugPrint('Latitude: ${location.latitude}');
-          debugPrint('Longitude: ${location.longitude}');
           final weather = await _weatherService.getCurrentWeatherByLocation(
             location.latitude!,
             location.longitude!,
           );
-          debugPrint('Weather city: ${weather.cityName}');
 
           final city = weather.cityName.trim();
 

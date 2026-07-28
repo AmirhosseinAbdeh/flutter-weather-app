@@ -30,10 +30,8 @@ class LocationResult {
 
 class LocationService {
   Future<LocationResult> getCurrentLocation() async {
-    debugPrint('A - getCurrentLocation');
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      debugPrint('B - serviceEnabled = $serviceEnabled');
 
       if (!serviceEnabled) {
         return const LocationResult(
@@ -43,7 +41,6 @@ class LocationService {
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
-      debugPrint('C - permission = $permission');
 
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -86,13 +83,9 @@ class LocationService {
           timeLimit: Duration(seconds: 15),
         );
       }
-      debugPrint('E - before getCurrentPosition');
       final position = await Geolocator.getCurrentPosition(
         locationSettings: locationSettings,
       );
-      debugPrint('F - after getCurrentPosition');
-      debugPrint('Latitude = ${position.latitude}');
-      debugPrint('Longitude = ${position.longitude}');
 
       return LocationResult(
         status: LocationStatus.success,
@@ -100,15 +93,11 @@ class LocationService {
         longitude: position.longitude,
       );
     } on TimeoutException {
-      debugPrint('TIMEOUT');
       return const LocationResult(
         status: LocationStatus.timeout,
         message: 'Location request timed out. Please try again.',
       );
-    } catch (e, s) {
-      debugPrint('ERROR');
-      debugPrint(e.toString());
-      debugPrint(s.toString());
+    } catch (_) {
       return const LocationResult(
         status: LocationStatus.error,
         message: 'Failed to get current location.',
