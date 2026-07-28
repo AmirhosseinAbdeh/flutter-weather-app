@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/forecast.dart';
 import '../models/weather.dart';
-import 'package:flutter/foundation.dart';
 
 /// Thrown when a weather request fails, carrying a user-friendly [message].
 class WeatherException implements Exception {
@@ -45,7 +44,6 @@ class WeatherService {
       latitude,
       longitude,
     );
-    debugPrint('INSIDE WEATHER SERVICE');
     return Weather.fromJson(json);
   }
 
@@ -120,8 +118,6 @@ class WeatherService {
         'lang': ApiConfig.language,
       },
     );
-
-    debugPrint(uri.toString());
 
     final http.Response response;
 
