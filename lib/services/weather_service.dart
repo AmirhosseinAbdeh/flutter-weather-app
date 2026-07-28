@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/forecast.dart';
 import '../models/weather.dart';
+import 'package:flutter/foundation.dart';
 
 /// Thrown when a weather request fails, carrying a user-friendly [message].
 class WeatherException implements Exception {
@@ -31,6 +32,20 @@ class WeatherService {
   /// (missing key, unknown city, network error, or unexpected status).
   Future<Weather> getCurrentWeather(String city) async {
     final json = await _fetch(ApiConfig.weatherPath, city);
+    return Weather.fromJson(json);
+  }
+
+  /// Fetches the current weather using geographic coordinates.
+  Future<Weather> getCurrentWeatherByLocation(
+    double latitude,
+    double longitude,
+  ) async {
+    final json = await _fetchByLocation(
+      ApiConfig.weatherPath,
+      latitude,
+      longitude,
+    );
+    debugPrint('INSIDE WEATHER SERVICE');
     return Weather.fromJson(json);
   }
 
@@ -78,6 +93,53 @@ class WeatherService {
         throw const WeatherException('Invalid API key.');
       case 404:
         throw WeatherException('City "$city" not found.');
+      default:
+        throw WeatherException(
+          'Failed to load weather (HTTP ${response.statusCode}).',
+        );
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchByLocation(
+    String path,
+    double latitude,
+    double longitude,
+  ) async {
+    if (_apiKey.isEmpty) {
+      throw const WeatherException(
+        'No API key set. Run with --dart-define=OWM_API_KEY=your_key.',
+      );
+    }
+
+    final uri = Uri.parse('${ApiConfig.baseUrl}$path').replace(
+      queryParameters: {
+        'lat': latitude.toString(),
+        'lon': longitude.toString(),
+        'appid': _apiKey,
+        'units': ApiConfig.units,
+        'lang': ApiConfig.language,
+      },
+    );
+
+    debugPrint(uri.toString());
+
+    final http.Response response;
+
+    try {
+      response = await _client.get(uri);
+    } catch (_) {
+      throw const WeatherException(
+        'Network error. Check your connection and try again.',
+      );
+    }
+
+    switch (response.statusCode) {
+      case 200:
+        return jsonDecode(response.body) as Map<String, dynamic>;
+
+      case 401:
+        throw const WeatherException('Invalid API key.');
+
       default:
         throw WeatherException(
           'Failed to load weather (HTTP ${response.statusCode}).',
