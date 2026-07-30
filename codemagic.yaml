@@ -6,11 +6,12 @@ workflows:
     environment:
       flutter: stable
       vars:
-        OWM_API_KEY: "7c33aed1d6a88134dd0bc1607faf0095"  # Put your actual API key here
+        OWM_API_KEY: "7c33aed1d6a88134dd0bc1607faf0095"
     scripts:
       - name: Get dependencies
         script: flutter pub get
-      - name: Build final APK
-        script: flutter build apk --release --dart-define=OWM_API_KEY=$OWM_API_KEY
+      - name: Build APK
+        script: |
+          flutter build apk --release --dart-define=OWM_API_KEY=$OWM_API_KEY
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
